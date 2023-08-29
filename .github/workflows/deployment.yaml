@@ -48,10 +48,9 @@ jobs:
       - name: Capture ECR Image URL
         id: tf
         run: |
-          EOF=$(terraform output -raw ecr_image_url | cut -d ':' -f 1)
-          echo "text<<$EOF" >>  $GITHUB_ENV
-          echo $ECR_IMAGE_URL >> $GITHUB_ENV
-          echo "$EOF" >> $GITHUB_ENV
+          echo "ECR_IMAGE_URL<<EOF" >>  $GITHUB_ENV
+          echo $(terraform output -raw ecr_image_url | cut -d ':' -f 1) >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
         working-directory: terraform/
 
 
