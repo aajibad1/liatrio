@@ -32,12 +32,6 @@ jobs:
           role-to-assume: arn:aws:iam::218920203343:role/github
           aws-region: us-east-1  # Replace with your desired AWS region
 
-      - name: Configure AWS credentials for Terraform
-        run: |
-          echo "AWS_ACCESS_KEY_ID=${{ steps.assume-role.outputs.access_key_id }}" >> $GITHUB_ENV
-          echo "AWS_SECRET_ACCESS_KEY=${{ steps.assume-role.outputs.secret_access_key }}" >> $GITHUB_ENV
-          echo "AWS_SESSION_TOKEN=${{ steps.assume-role.outputs.session_token }}" >> $GITHUB_ENV
-
       - name: Initialize Terraform
         run: terraform init 
         working-directory: terraform/
