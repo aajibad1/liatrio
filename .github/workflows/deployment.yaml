@@ -2,8 +2,6 @@ name: Terraform Automation
 
 on:
   push:
-    paths:
-      - 'terraform/**'
     branches:
       - master
     
