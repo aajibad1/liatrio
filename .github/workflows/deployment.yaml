@@ -54,17 +54,17 @@ jobs:
       - name: Get AWS Account ID
         id: get-account-id
         run: echo "::set-output name=ACCOUNT_ID::$(aws sts get-caller-identity --query 'Account' --output text)"
-        env:
-          AWS_ACCESS_KEY_ID: ${{ steps.assume-role.outputs.access_key_id }}
-          AWS_SECRET_ACCESS_KEY: ${{ steps.assume-role.outputs.secret_access_key }}
-          AWS_SESSION_TOKEN: ${{ steps.assume-role.outputs.session_token }}
+        # env:
+        #   AWS_ACCESS_KEY_ID: ${{ steps.assume-role.outputs.access_key_id }}
+        #   AWS_SECRET_ACCESS_KEY: ${{ steps.assume-role.outputs.secret_access_key }}
+        #   AWS_SESSION_TOKEN: ${{ steps.assume-role.outputs.session_token }}
 
       - name: Log into Amazon ECR
         run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ steps.get-account-id.outputs.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com 
-        env:
-          AWS_ACCESS_KEY_ID: ${{ steps.assume-role.outputs.access_key_id }}
-          AWS_SECRET_ACCESS_KEY: ${{ steps.assume-role.outputs.secret_access_key }}
-          AWS_SESSION_TOKEN: ${{ steps.assume-role.outputs.session_token }}
+        # env:
+        #   AWS_ACCESS_KEY_ID: ${{ steps.assume-role.outputs.access_key_id }}
+        #   AWS_SECRET_ACCESS_KEY: ${{ steps.assume-role.outputs.secret_access_key }}
+        #   AWS_SESSION_TOKEN: ${{ steps.assume-role.outputs.session_token }}
 
       - name: Tag Docker image
         run: docker tag liatrio ${{ env.ECR_IMAGE_URL }}
