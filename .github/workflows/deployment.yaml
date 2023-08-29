@@ -53,7 +53,7 @@ jobs:
           EOF
           )
           echo $ECR_IMAGE_URL
-          echo $ECR_IMAGE_URL >> $GITHUB_ENV
+          echo $ECR_IMAGE_URL=$ECR_IMAGE_URL >> $GITHUB_ENV
         working-directory: terraform/
 
 
