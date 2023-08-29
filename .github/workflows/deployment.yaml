@@ -3,7 +3,10 @@ name: Terraform Automation
 on:
   push:
     paths:
-      - 'terraform/**'  # Run on changes in the terraform directory
+      - 'terraform/**'
+    branches:
+      - master
+    
 
 jobs:
   terraform:
