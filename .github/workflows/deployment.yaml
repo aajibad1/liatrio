@@ -16,13 +16,17 @@ jobs:
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v1
 
-    - name: Configure AWS credentials
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    - name: Assume AWS IAM Role
+      id: assume-role
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: arn:aws:iam::218920203343:role/github
+
+    - name: Configure AWS credentials for Terraform
       run: |
-        echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> $GITHUB_ENV
-        echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> $GITHUB_ENV
+        echo "AWS_ACCESS_KEY_ID=${{ steps.assume-role.outputs.access_key_id }}" >> $GITHUB_ENV
+        echo "AWS_SECRET_ACCESS_KEY=${{ steps.assume-role.outputs.secret_access_key }}" >> $GITHUB_ENV
+        echo "AWS_SESSION_TOKEN=${{ steps.assume-role.outputs.session_token }}" >> $GITHUB_ENV
 
     - name: Initialize Terraform
       run: terraform init 
@@ -35,31 +39,33 @@ jobs:
     - name: Apply changes
       run: terraform apply -auto-approve -var-file=terraform.tfvars 
       working-directory: terraform/
+        post-actions:
+          - name: Capture ECR Image URL
+            run: echo "ECR_IMAGE_URL=$(terraform output -raw ecr_image_url)" >> $GITHUB_ENV
+
+    - name: Build Docker image
+      run: docker build -t liatrio --build-arg ECR_IMAGE_URL=${{ env.ECR_IMAGE_URL }} .
+
+    
+    - name: Get AWS Account ID
+      id: get-account-id
+      run: echo "::set-output name=ACCOUNT_ID::$(aws sts get-caller-identity --query 'Account' --output text)"
+      env:
+        AWS_ACCESS_KEY_ID: ${{ steps.assume-role.outputs.access_key_id }}
+        AWS_SECRET_ACCESS_KEY: ${{ steps.assume-role.outputs.secret_access_key }}
+        AWS_SESSION_TOKEN: ${{ steps.assume-role.outputs.session_token }}
+
+    - name: Log into Amazon ECR
+      run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ steps.get-account-id.outputs.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com 
+      env:
+        AWS_ACCESS_KEY_ID: ${{ steps.assume-role.outputs.access_key_id }}
+        AWS_SECRET_ACCESS_KEY: ${{ steps.assume-role.outputs.secret_access_key }}
+        AWS_SESSION_TOKEN: ${{ steps.assume-role.outputs.session_token }}
+
+    - name: Tag Docker image
+      run: docker tag liatrio ${{ env.ECR_IMAGE_URL }}
+
+    - name: Push Docker image to ECR
+      run: docker push ${{ env.ECR_IMAGE_URL }}
 
 
-  build-docker-image:
-    runs-on: ubuntu-latest
-    needs: Deployment
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Log in to AWS ECR
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      - name: Extract ECR URL
-        id: extract_ecr_url
-        run: |
-          echo "::set-output name=ecr_url::$(terraform output -json ecr_image_url | jq -r)"
-
-      - name: Build and push Docker image
-        working-directory: app
-        env:
-          ECR_URL: ${{ steps.extract_ecr_url.outputs.ecr_url }}
-        run: |
-          docker build -t $ECR_URL .
-          docker push $ECR_URL
