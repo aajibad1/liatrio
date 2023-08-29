@@ -45,27 +45,14 @@ jobs:
         run: terraform apply -auto-approve -var-file=terraform.tfvars 
         working-directory: terraform/
 
-      - name: Capture ECR Image URL
-        id: tf
-        run: |
-          echo "ECR_IMAGE_URL<<EOF" >>  $GITHUB_ENV
-          echo $(terraform output -raw ecr_image_url) >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-          echo "output is $ECR_IMAGE_URL"
-        working-directory: terraform/
-
-
-
-      - name: Build Docker image
-        run: docker build -t my-docker-image --build-arg ECR_IMAGE_URL=$ECR_IMAGE_URL
-        env:
-          ECR_IMAGE_URL: ${{ env.ECR_IMAGE_URL }}
-
-
       
       - name: Get AWS Account ID
         id: get-account-id
         run: echo "::set-output name=ACCOUNT_ID::$(aws sts get-caller-identity --query 'Account' --output text)"
+
+      
+      - name: Build Docker image
+        run: docker build -t my-docker-image --build-arg ${{ steps.get-account-id.outputs.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/liatrio
   
 
       - name: Log into Amazon ECR
