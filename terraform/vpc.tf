@@ -18,27 +18,22 @@ resource "aws_vpc" "main" {
 resource "aws_subnet" "main-public" {
   vpc_id                  = aws_vpc.main.id
   count                   = var.AZ_COUNT
-  cidr_block        	    = "${cidrsubnet(aws_vpc.main.cidr_block, var.SUBNET_CIDR_BITS, count.index)}"
+  cidr_block              = cidrsubnet(aws_vpc.main.cidr_block, var.SUBNET_CIDR_BITS, count.index)
   map_public_ip_on_launch = "true"
-  availability_zone       = "${data.aws_availability_zones.available.names[count.index]}"
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
   tags = {
     Name = "${var.RESOURCE_TAG}.public.${data.aws_availability_zones.available.names[count.index]}"
-    "kubernetes.io/cluster/${var.RESOURCE_TAG}-cluster-${var.ENVIRONMENT}" = "owned"
-    "kubernetes.io/role/elb" = 1
-
   }
 }
 
 # VPC Private Subnets
 resource "aws_subnet" "main-private" {
-  vpc_id                  = aws_vpc.main.id
-  count            	      = var.AZ_COUNT
-  cidr_block     	        = "${cidrsubnet(aws_vpc.main.cidr_block, var.SUBNET_CIDR_BITS, count.index + length(aws_subnet.main-public.*.id))}"
-  availability_zone       = "${data.aws_availability_zones.available.names[count.index]}"
+  vpc_id            = aws_vpc.main.id
+  count             = var.AZ_COUNT
+  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, var.SUBNET_CIDR_BITS, count.index + length(aws_subnet.main-public.*.id))
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   tags = {
     Name = "${var.RESOURCE_TAG}.private.${data.aws_availability_zones.available.names[count.index]}"
-    "kubernetes.io/cluster/${var.RESOURCE_TAG}-cluster-${var.ENVIRONMENT}" = "owned"
-    "kubernetes.io/role/internal-elb" = 1
   }
 }
 
@@ -54,7 +49,7 @@ resource "aws_internet_gateway" "main-gw" {
 # NAT GW
 resource "aws_nat_gateway" "nat-gw" {
   allocation_id = aws_eip.nat-eip.id
-  subnet_id = aws_subnet.main-public[0].id
+  subnet_id     = aws_subnet.main-public[0].id
   tags = {
     Name = "${var.RESOURCE_TAG}-NAT"
   }
@@ -63,7 +58,7 @@ resource "aws_nat_gateway" "nat-gw" {
 
 #Elastic IP for NAT
 resource "aws_eip" "nat-eip" {
-  vpc 	= true
+  vpc = true
   tags = {
     Name = "${var.RESOURCE_TAG}-NGW-IP"
   }
@@ -90,22 +85,22 @@ resource "aws_route_table" "main-rt-private" {
 
 #Route for Private Route Table
 resource "aws_route" "private-route" {
-  route_table_id          =  aws_route_table.main-rt-private.id
-  destination_cidr_block  =  "0.0.0.0/0"
-  nat_gateway_id         =  aws_nat_gateway.nat-gw.id
+  route_table_id         = aws_route_table.main-rt-private.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.nat-gw.id
   depends_on             = [aws_route_table.main-rt-private]
 }
 
 # Route Associations Public
 resource "aws_route_table_association" "main-rta-public-1" {
   count          = var.AZ_COUNT
-  subnet_id      = "${element(aws_subnet.main-public.*.id, count.index)}"
+  subnet_id      = element(aws_subnet.main-public.*.id, count.index)
   route_table_id = aws_route_table.main-rt-public.id
 }
 
 # Route Associations Private
 resource "aws_route_table_association" "main-rta-private-1" {
-  count            =  var.AZ_COUNT
-  subnet_id        = "${element(aws_subnet.main-private.*.id, count.index)}"
-  route_table_id   = aws_route_table.main-rt-private.id
+  count          = var.AZ_COUNT
+  subnet_id      = element(aws_subnet.main-private.*.id, count.index)
+  route_table_id = aws_route_table.main-rt-private.id
 }

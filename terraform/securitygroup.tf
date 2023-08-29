@@ -1,6 +1,6 @@
 # Security group for public subnet
 resource "aws_security_group" "public_sg" {
-  name   =  "${var.RESOURCE_TAG}-Public-sg"
+  name   = "${var.RESOURCE_TAG}-Public-sg"
   vpc_id = aws_vpc.main.id
 
   tags = {
@@ -15,7 +15,7 @@ resource "aws_security_group_rule" "sg_ingress_public_443" {
   from_port         = 443
   to_port           = 443
   protocol          = "tcp"
-  cidr_blocks       = [var.VPC_CIDR_BLOCK]
+  cidr_blocks       = ["0.0.0.0/0"]
 }
 
 resource "aws_security_group_rule" "sg_ingress_public_80" {
@@ -24,7 +24,7 @@ resource "aws_security_group_rule" "sg_ingress_public_80" {
   from_port         = 80
   to_port           = 80
   protocol          = "tcp"
-  cidr_blocks       = [var.VPC_CIDR_BLOCK]
+  cidr_blocks       = ["0.0.0.0/0"]
 }
 
 resource "aws_security_group_rule" "sg_egress_public" {
@@ -38,7 +38,7 @@ resource "aws_security_group_rule" "sg_egress_public" {
 
 # Security group for data plane
 resource "aws_security_group" "data_plane_sg" {
-  name   =  "${var.RESOURCE_TAG}-Worker-sg"
+  name   = "${var.RESOURCE_TAG}-Worker-sg"
   vpc_id = aws_vpc.main.id
   tags = {
     Name = "${var.RESOURCE_TAG}-Worker-sg"
@@ -149,7 +149,7 @@ resource "aws_security_group" "eks_nodes" {
   }
 
   tags = {
-    Name                                           = "${var.RESOURCE_TAG}-node-sg"
+    Name                                                = "${var.RESOURCE_TAG}-node-sg"
     "kubernetes.io/cluster/${var.RESOURCE_TAG}-cluster" = "owned"
   }
 }
@@ -173,6 +173,5 @@ resource "aws_security_group_rule" "nodes_cluster_inbound" {
   to_port                  = 65535
   type                     = "ingress"
 }
-
 
 
