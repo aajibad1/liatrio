@@ -52,7 +52,8 @@ jobs:
 
       
       - name: Build Docker image
-        run: docker build -t liatrio
+        run: docker build -t liatrio .
+        working-directory: app/
   
 
       - name: Log into Amazon ECR
