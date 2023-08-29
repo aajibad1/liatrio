@@ -95,7 +95,7 @@ jobs:
       - name: Use Kubectl
         run: |
           kubectl config current-context
-          kubectl config use-context eks-cluster-liatrio-nonprod
+          kubectl config use-context arn:aws:eks:us-east-1:${{ steps.get-account-id.outputs.ACCOUNT_ID }}:cluster/eks-cluster-liatrio-nonprod
 
       - name: Deploy Helm Chart
         run: |
