@@ -32,41 +32,71 @@ Create a GitHub Actions workflow YAML file to automate the execution of your Ter
 
 2. **Paste the Workflow Configuration**:
    ```yaml
-   name: Terraform Automation
+      name: Terraform
 
-    on:
-      push:
-        branches:
-          - master  # Run on push to the master branch
+      on:
+        push:
+          branches:
+            - master  # Run on push to the master branch
 
-    jobs:
-      terraform:
+      jobs:
+        terraform:
+          runs-on: ubuntu-latest
+
+          steps:
+          - name: Checkout repository
+            uses: actions/checkout@v2
+
+          - name: Set up Terraform
+            uses: hashicorp/setup-terraform@v1
+
+          - name: Configure AWS credentials
+            env:
+              AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+              AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            run: |
+              echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> $GITHUB_ENV
+              echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> $GITHUB_ENV
+
+          - name: Initialize Terraform
+            run: terraform init 
+            working-directory: terraform/
+
+          - name: Plan changes
+            run: terraform plan -var-file=terraform.tfvars 
+            working-directory: terraform/
+
+          - name: Apply changes
+            run: terraform apply -auto-approve -var-file=terraform.tfvars 
+            working-directory: terraform/
+
+
+      build-docker-image:
         runs-on: ubuntu-latest
-
+        needs: terraform
         steps:
-        - name: Checkout repository
-          uses: actions/checkout@v2
+          - name: Checkout repository
+            uses: actions/checkout@v2
 
-        - name: Set up Terraform
-          uses: hashicorp/setup-terraform@v1
+          - name: Log in to AWS ECR
+            uses: aws-actions/configure-aws-credentials@v1
+            with:
+              aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+              aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+              aws-region: us-east-1
 
-        - name: Configure AWS credentials
-          env:
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          run: echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" > ~/.env
+          - name: Extract ECR URL
+            id: extract_ecr_url
+            run: |
+              echo "::set-output name=ecr_url::$(terraform output -json ecr_image_url | jq -r)"
 
-        - name: Initialize Terraform
-          run: terraform init 
-          working-directory: terraform/
-
-        - name: Plan changes
-          run: terraform plan -var-file=terraform.tfvars 
-          working-directory: terraform/
-
-        - name: Apply changes
-          run: terraform apply -auto-approve -var-file=terraform.tfvars 
-          working-directory: terraform/
+          - name: Build and push Docker image
+            working-directory: app
+            env:
+              ECR_URL: ${{ steps.extract_ecr_url.outputs.ecr_url }}
+            run: |
+              docker build -t $ECR_URL .
+              docker push $ECR_URL
 
    ```
 
