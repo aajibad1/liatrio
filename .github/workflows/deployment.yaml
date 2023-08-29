@@ -47,11 +47,14 @@ jobs:
 
       - name: Capture ECR Image URL
         id: ecr-url
-        run: echo "::set-output name=ECR_IMAGE_URL::$(terraform output -raw ecr_image_url)"
-
+        run: |
+          echo "ECR_IMAGE_URL=$(terraform output -raw ecr_image_url)" >> $GITHUB_ENV
 
       - name: Build Docker image
-        run: docker build -t liatrio --build-arg ECR_IMAGE_URL=${{ steps.ecr-url.outputs.ECR_IMAGE_URL }}.
+        run: docker build -t my-docker-image --build-arg ECR_IMAGE_URL=$ECR_IMAGE_URL
+        env:
+          ECR_IMAGE_URL: ${{ env.ECR_IMAGE_URL }}
+
 
       
       - name: Get AWS Account ID
