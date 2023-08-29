@@ -39,9 +39,9 @@ jobs:
       - name: Apply changes
         run: terraform apply -auto-approve -var-file=terraform.tfvars 
         working-directory: terraform/
-        post-steps:
-          - name: Capture ECR Image URL
-            run: echo "ECR_IMAGE_URL=$(terraform output -raw ecr_image_url)" >> $GITHUB_ENV
+
+      - name: Capture ECR Image URL
+        run: echo "ECR_IMAGE_URL=$(terraform output -raw ecr_image_url)" >> $GITHUB_ENV
 
       - name: Build Docker image
         run: docker build -t liatrio --build-arg ECR_IMAGE_URL=${{ env.ECR_IMAGE_URL }} .
