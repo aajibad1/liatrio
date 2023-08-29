@@ -1,0 +1,35 @@
+name: Docker Build and Deploy
+
+on:
+  workflow_run:
+    workflows: ["Terraform Automation"]
+    types:
+      - completed
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Log in to AWS ECR
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Extract ECR URL
+      id: extract_ecr_url
+      run: |
+        echo "::set-output name=ecr_url::$(terraform output -json ecr_image_url | jq -r)"
+
+    - name: Build and push Docker image
+      working-directory: app
+      env:
+        ECR_URL: ${{ steps.extract_ecr_url.outputs.ecr_url }}
+      run: |
+        docker build -t $ECR_URL .
+        docker push $ECR_URL

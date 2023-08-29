@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: liatrio
+  namespace: liatrio
+  labels:
+    app: liatrio
+spec:
+  type: NodePort
+  ports:
+    - name: ui
+      port: 5000
+      targetPort: 5000
+      protocol: TCP
+    - name: http
+      port: 80         # Add this line to define port 80
+      targetPort: 5000
+  selector:
+    app: liatrio
