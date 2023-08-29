@@ -30,6 +30,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: arn:aws:iam::218920203343:role/github
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: us-east-1  # Replace with your desired AWS region
 
       - name: Initialize Terraform
