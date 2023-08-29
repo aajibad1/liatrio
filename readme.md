@@ -36,8 +36,8 @@ Create a GitHub Actions workflow YAML file to automate the execution of your Ter
 
    on:
      push:
-       paths:
-         - 'terraform/**'  # Run on changes in the terraform directory
+       branches:
+         - master  # Run on changes in the terraform directory
 
    jobs:
      terraform:
