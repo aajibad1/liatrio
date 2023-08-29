@@ -56,8 +56,7 @@ jobs:
           echo $EKS_CLUSTER_NAME
           EKS_CLUSTER_NAME=$(echo $EKS_CLUSTER_NAME | tr -d '"') 
           # Generate and capture kubeconfig
-          aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region us-east-1 --kubeconfig eks-config
-          echo "::set-output name=KUBECONFIG_CONTENT::$(cat eks-config)"
+          aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region us-east-1
         working-directory: terraform/
       
       - name: Capture ECR Image URL
@@ -93,16 +92,10 @@ jobs:
       - name: Push Docker image to ECR
         run: docker push ${{ steps.get-account-id.outputs.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/liatrio
 
-
-      - name: Set KUBECONFIG Environment Variable
-        run: echo "KUBECONFIG=$KUBECONFIG_CONTENT" >> $GITHUB_ENV
-        env:
-          KUBECONFIG_CONTENT: ${{ steps.Capture.outputs.KUBECONFIG_CONTENT }}
-
-      - name: Use Kubectl
-        run: |
-          echo "$KUBECONFIG_CONTENT" > kubeconfig.yaml
-          kubectl config use-context eks-cluster-liatrio-nonprod
+      # - name: Use Kubectl
+      #   run: |
+      #     echo "$KUBECONFIG_CONTENT" > kubeconfig.yaml
+      #     kubectl config use-context eks-cluster-liatrio-nonprod
 
       - name: Deploy Helm Chart
         run: |
