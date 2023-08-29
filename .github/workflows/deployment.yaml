@@ -69,7 +69,7 @@ jobs:
       - name: Capture Kubeconfig
         run: |
           # Get the EKS cluster name from the Terraform output
-          EKS_CLUSTER_NAME=$(terraform output -raw cluster_name)
+          EKS_CLUSTER_NAME=$(terraform output  cluster_name)
           
           # Generate and capture kubeconfig
           aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region us-east-1 --kubeconfig eks-config
@@ -79,7 +79,7 @@ jobs:
       - name: Capture ECR Image URL
         id: tf
         run: |
-          ECR_IMAGE_URL=$(terraform output -raw ecr_image_url)
+          ECR_IMAGE_URL=$(terraform output ecr_image_url)
           echo "ECR_IMAGE_URL=$ECR_IMAGE_URL" >> $GITHUB_ENV
         working-directory: terraform/
 
