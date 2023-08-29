@@ -52,7 +52,7 @@ jobs:
 
       
       - name: Build Docker image
-        run: docker build -t my-docker-image --build-arg ${{ steps.get-account-id.outputs.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/liatrio
+        run: docker build -t liatrio
   
 
       - name: Log into Amazon ECR
@@ -60,9 +60,9 @@ jobs:
 
 
       - name: Tag Docker image
-        run: docker tag liatrio ${{ env.ECR_IMAGE_URL }}
+        run: docker tag liatrio ${{ steps.get-account-id.outputs.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/liatrio
 
       - name: Push Docker image to ECR
-        run: docker push ${{ env.ECR_IMAGE_URL }}
+        run: docker push ${{ steps.get-account-id.outputs.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/liatrio
 
 
