@@ -42,8 +42,31 @@ jobs:
         working-directory: terraform/
 
       - name: Apply changes
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         run: terraform apply -auto-approve -var-file=terraform.tfvars 
         working-directory: terraform/
+      
+      - name: Capture Kubeconfig
+        run: |
+          # Get the EKS cluster name from the Terraform output
+          EKS_CLUSTER_NAME=$(terraform output  cluster_name)
+          
+          # Generate and capture kubeconfig
+          aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region us-east-1 --kubeconfig eks-config
+          echo "KUBECONFIG=$(cat eks-config)" >> $GITHUB_ENV
+        working-directory: terraform/
+      
+      - name: Capture ECR Image URL
+        id: tf
+        run: |
+          ECR_IMAGE_URL=$(terraform output ecr_image_url)
+          echo "ECR_IMAGE_URL=$ECR_IMAGE_URL" >> $GITHUB_ENV
+        working-directory: terraform/
+
+      - name: Update Deployment YAML
+        run: |
+          sed -i "s|image: .*|image: $ECR_IMAGE_URL|" deployment.yaml
+        working-directory: kubernetes/templates/
 
       
       - name: Get AWS Account ID
@@ -66,27 +89,6 @@ jobs:
       - name: Push Docker image to ECR
         run: docker push ${{ steps.get-account-id.outputs.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/liatrio
 
-      - name: Capture Kubeconfig
-        run: |
-          # Get the EKS cluster name from the Terraform output
-          EKS_CLUSTER_NAME=$(terraform output  cluster_name)
-          
-          # Generate and capture kubeconfig
-          aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region us-east-1 --kubeconfig eks-config
-          echo "KUBECONFIG=$(cat eks-config)" >> $GITHUB_ENV
-        working-directory: terraform/
-      
-      - name: Capture ECR Image URL
-        id: tf
-        run: |
-          ECR_IMAGE_URL=$(terraform output ecr_image_url)
-          echo "ECR_IMAGE_URL=$ECR_IMAGE_URL" >> $GITHUB_ENV
-        working-directory: terraform/
-
-      - name: Update Deployment YAML
-        run: |
-          sed -i "s|image: .*|image: $ECR_IMAGE_URL|" deployment.yaml
-        working-directory: kubernetes/templates/
 
       - name: Deploy Helm Chart
         run: |
