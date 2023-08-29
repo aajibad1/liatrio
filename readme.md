@@ -32,7 +32,7 @@ Create a GitHub Actions workflow YAML file to automate the execution of your Ter
 
 2. **Paste the Workflow Configuration**:
    ```yaml
-      name: Terraform
+      name: Deployment
 
       on:
         push:
@@ -73,7 +73,7 @@ Create a GitHub Actions workflow YAML file to automate the execution of your Ter
 
       build-docker-image:
         runs-on: ubuntu-latest
-        needs: terraform
+        needs: Deployment
         steps:
           - name: Checkout repository
             uses: actions/checkout@v2
