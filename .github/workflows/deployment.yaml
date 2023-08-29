@@ -95,17 +95,17 @@ jobs:
 
 
       - name: Set KUBECONFIG Environment Variable
-          run: echo "KUBECONFIG=$KUBECONFIG_CONTENT" >> $GITHUB_ENV
-          env:
-            KUBECONFIG_CONTENT: ${{ steps.Capture.outputs.KUBECONFIG_CONTENT }}
+        run: echo "KUBECONFIG=$KUBECONFIG_CONTENT" >> $GITHUB_ENV
+        env:
+          KUBECONFIG_CONTENT: ${{ steps.Capture.outputs.KUBECONFIG_CONTENT }}
 
-        - name: Use Kubectl
-          run: |
-            echo "$KUBECONFIG_CONTENT" > kubeconfig.yaml
-            kubectl config use-context $KUBE_CONTEXT
-          env:
-            KUBECONFIG_CONTENT: ${{ env.KUBECONFIG_CONTENT }}
-            KUBE_CONTEXT: ${{ env.KUBE_CONTEXT }}
+      - name: Use Kubectl
+        run: |
+          echo "$KUBECONFIG_CONTENT" > kubeconfig.yaml
+          kubectl config use-context $KUBE_CONTEXT
+        env:
+          KUBECONFIG_CONTENT: ${{ env.KUBECONFIG_CONTENT }}
+          KUBE_CONTEXT: ${{ env.KUBE_CONTEXT }}
 
       - name: Deploy Helm Chart
         run: |
