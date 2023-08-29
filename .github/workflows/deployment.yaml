@@ -18,10 +18,9 @@ jobs:
 
       - name: Assume AWS IAM Role
         id: assume-role
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: arn:aws:iam::218920203343:role/github
-          audience: sts.amazonaws.com
           aws-region: us-east-1  # Replace with your desired AWS region
 
       - name: Configure AWS credentials for Terraform
