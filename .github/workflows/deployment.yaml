@@ -52,7 +52,7 @@ jobs:
         run: |
           # Get the EKS cluster name from the Terraform output
           EKS_CLUSTER_NAME=$(terraform output  cluster_name)
-          
+          echo $EKS_CLUSTER_NAME
           # Generate and capture kubeconfig
           aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region us-east-1 --kubeconfig eks-config
           echo "KUBECONFIG=$(cat eks-config)" >> $GITHUB_ENV
