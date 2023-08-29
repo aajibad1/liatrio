@@ -49,8 +49,9 @@ jobs:
         id: tf
         run: |
           echo "ECR_IMAGE_URL<<EOF" >>  $GITHUB_ENV
-          echo $(terraform output -raw ecr_image_url | cut -d ':' -f 1) >> $GITHUB_ENV
+          echo $(terraform output -raw ecr_image_url) >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
+          echo "output is $ECR_IMAGE_URL"
         working-directory: terraform/
 
 
