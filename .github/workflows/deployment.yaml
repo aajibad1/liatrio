@@ -102,10 +102,7 @@ jobs:
       - name: Use Kubectl
         run: |
           echo "$KUBECONFIG_CONTENT" > kubeconfig.yaml
-          kubectl config use-context $KUBE_CONTEXT
-        env:
-          KUBECONFIG_CONTENT: ${{ env.KUBECONFIG_CONTENT }}
-          KUBE_CONTEXT: ${{ env.KUBE_CONTEXT }}
+          kubectl config use-context eks-cluster-liatrio-nonprod
 
       - name: Deploy Helm Chart
         run: |
