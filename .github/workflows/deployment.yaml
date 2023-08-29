@@ -56,7 +56,7 @@ jobs:
           EKS_CLUSTER_NAME=$(echo $EKS_CLUSTER_NAME | tr -d '"') 
           # Generate and capture kubeconfig
           aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region us-east-1 --kubeconfig eks-config
-          echo "::set-env name=KUBECONFIG::$(cat eks-config)"
+          echo "KUBECONFIG_CONTENT=$(cat eks-config)" >> $GITHUB_ENV
         working-directory: terraform/
       
       - name: Capture ECR Image URL
