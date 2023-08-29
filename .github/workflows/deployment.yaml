@@ -48,8 +48,7 @@ jobs:
       - name: Capture ECR Image URL
         id: tf
         run: |
-          ECR_IMAGE_URL=$(terraform output -raw ecr_image_url)
-          echo $ECR_IMAGE_URL
+          echo "ECR_IMAGE_URL=$(terraform output -raw ecr_image_url)"
         working-directory: terraform/
 
 
