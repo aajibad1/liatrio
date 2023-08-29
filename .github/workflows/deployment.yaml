@@ -46,7 +46,6 @@ jobs:
         working-directory: terraform/
 
       - name: Capture ECR Image URL
-        id: ecr-url
         run: echo "ECR_IMAGE_URL=$(terraform output -raw ecr_image_url)" >> $GITHUB_ENV
 
       - name: Build Docker image
