@@ -23,13 +23,13 @@ jobs:
       run: echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" > ~/.env
 
     - name: Initialize Terraform
-      run: terraform init terraform
-      working-directory: terraform
+      run: terraform init 
+      working-directory: terraform/
 
     - name: Plan changes
-      run: terraform plan -var-file=terraform/terraform.tfvars terraform
-      working-directory: terraform
+      run: terraform plan -var-file=terraform/terraform.tfvars 
+      working-directory: terraform/
 
     - name: Apply changes
-      run: terraform apply -auto-approve -var-file=terraform/terraform.tfvars terraform
-      working-directory: terraform
+      run: terraform apply -auto-approve -var-file=terraform/terraform.tfvars 
+      working-directory: terraform/

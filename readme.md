@@ -34,36 +34,40 @@ Create a GitHub Actions workflow YAML file to automate the execution of your Ter
    ```yaml
    name: Terraform Automation
 
-   on:
-     push:
-       branches:
-         - master  # Run on changes in the terraform directory
+    on:
+      push:
+        branches:
+          - master  # Run on push to the master branch
 
-   jobs:
-     terraform:
-       runs-on: ubuntu-latest
+    jobs:
+      terraform:
+        runs-on: ubuntu-latest
 
-       steps:
-       - name: Checkout repository
-         uses: actions/checkout@v2
+        steps:
+        - name: Checkout repository
+          uses: actions/checkout@v2
 
-       - name: Set up Terraform
-         uses: hashicorp/setup-terraform@v1
+        - name: Set up Terraform
+          uses: hashicorp/setup-terraform@v1
 
-       - name: Configure AWS credentials
-         env:
-           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-         run: echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" > ~/.env
+        - name: Configure AWS credentials
+          env:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          run: echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" > ~/.env
 
-       - name: Initialize Terraform
-         run: terraform init terraform
+        - name: Initialize Terraform
+          run: terraform init 
+          working-directory: terraform/
 
-       - name: Plan changes
-         run: terraform plan -var-file=terraform/terraform.tfvars terraform
+        - name: Plan changes
+          run: terraform plan -var-file=terraform/terraform.tfvars 
+          working-directory: terraform/
 
-       - name: Apply changes
-         run: terraform apply -auto-approve -var-file=terraform/terraform.tfvars terraform
+        - name: Apply changes
+          run: terraform apply -auto-approve -var-file=terraform/terraform.tfvars 
+          working-directory: terraform/
+
    ```
 
 ## Workflow Steps
