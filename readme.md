@@ -61,11 +61,11 @@ Create a GitHub Actions workflow YAML file to automate the execution of your Ter
           working-directory: terraform/
 
         - name: Plan changes
-          run: terraform plan -var-file=terraform/terraform.tfvars 
+          run: terraform plan -var-file=terraform.tfvars 
           working-directory: terraform/
 
         - name: Apply changes
-          run: terraform apply -auto-approve -var-file=terraform/terraform.tfvars 
+          run: terraform apply -auto-approve -var-file=terraform.tfvars 
           working-directory: terraform/
 
    ```
