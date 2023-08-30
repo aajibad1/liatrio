@@ -1,119 +1,150 @@
-# Terraform Execution Readme (AWS)
+Certainly, here's the complete README with all the updated changes:
 
-This document provides step-by-step instructions for setting up and executing Terraform using GitHub Actions with AWS credentials stored as GitHub Secrets. This will allow you to manage AWS infrastructure resources located in the `terraform` folder while keeping your credentials secure.
+```markdown
+# Liatrio Deployment Workflow
+
+This repository contains a GitHub Actions workflow that automates the deployment of an application using Amazon EKS, Terraform, Helm, and Kubernetes.
 
 ## Prerequisites
 
-Before you begin, ensure you have the following prerequisites:
+Before getting started, ensure you have the following set up:
 
-1. **GitHub Repository**: Make sure your Terraform code is stored in a GitHub repository.
+1. An AWS account with necessary permissions to create and manage EKS clusters, IAM roles, and EC2 resources.
+2. AWS CLI and `kubectl` installed on your local machine.
+3. Helm and Terraform installed on your local machine.
 
-2. **GitHub Account**: Create a GitHub account if you don't have one already.
+## Deployment Workflow
 
-3. **AWS Account**: Create an AWS account and gather the AWS access key ID and secret access key.
+### GitHub Actions Workflow
 
-## GitHub Secrets Setup
+The deployment workflow in this repository is triggered on pushes to the `master` branch. It follows these steps:
 
-To securely manage your AWS credentials, follow these steps to set up GitHub Secrets:
+1. Checkout the repository.
+2. Set up Terraform and assume the AWS IAM role with necessary permissions.
+3. Initialize Terraform and plan the changes.
+4. Apply Terraform changes (if the push is on the `master` branch).
+5. Capture the EKS cluster's kubeconfig.
+6. Capture the ECR image URL.
+7. Update the Kubernetes deployment manifest with the ECR image URL.
+8. Build and push the Docker image to ECR.
+9. Log into Amazon ECR.
+10. Tag the Docker image.
+11. Push the Docker image to ECR.
+12. Use `kubectl` to set the current context and namespace for EKS.
+13. Deploy the Helm chart using `helm upgrade --install`.
 
-1. **Access AWS Credentials**: Obtain your AWS access key ID and secret access key.
+### Manual Terraform Execution
 
-2. **Repository Secrets**:
-   - Navigate to your GitHub repository.
-   - Click on "Settings" > "Secrets".
-   - Click on "New repository secret".
-   - Create two secrets: `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` and provide their respective values.
+To run Terraform manually, follow these steps:
 
-## GitHub Actions Workflow
+1. Navigate to the `terraform` directory:
 
-Create a GitHub Actions workflow YAML file to automate the execution of your Terraform code. Here's how:
+```bash
+cd terraform
+```
 
-1. **Create Workflow File**: In your repository, create a `.github/workflows/terraform.yml` file.
+2. Initialize Terraform:
 
-2. **Paste the Workflow Configuration**:
-   ```yaml
-      name: Deployment
+```bash
+terraform init
+```
 
-      on:
-        push:
-          branches:
-            - master  # Run on push to the master branch
+3. Plan the changes:
 
-      jobs:
-        terraform:
-          runs-on: ubuntu-latest
+```bash
+terraform plan -var-file=terraform.tfvars
+```
 
-          steps:
-          - name: Checkout repository
-            uses: actions/checkout@v2
+4. Apply the changes:
 
-          - name: Set up Terraform
-            uses: hashicorp/setup-terraform@v1
+```bash
+terraform apply -auto-approve -var-file=terraform.tfvars
+```
 
-          - name: Configure AWS credentials
-            env:
-              AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-              AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            run: |
-              echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> $GITHUB_ENV
-              echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> $GITHUB_ENV
+### GitHub Actions IAM Role Setup
 
-          - name: Initialize Terraform
-            run: terraform init 
-            working-directory: terraform/
+To set up the IAM role for GitHub Actions, follow the guide provided by AWS: [Use IAM Roles to Connect GitHub Actions to Actions in AWS](https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws/).
 
-          - name: Plan changes
-            run: terraform plan -var-file=terraform.tfvars 
-            working-directory: terraform/
+Certainly, here's the updated section for the `deployment.yaml` file in the README:
 
-          - name: Apply changes
-            run: terraform apply -auto-approve -var-file=terraform.tfvars 
-            working-directory: terraform/
+```markdown
+# After Successful Deployment
+
+After a successful Terraform deployment, you need to update the `deployment.yaml` file with the ECR image URL that was created during the workflow. This will ensure that your Kubernetes application uses the correct Docker image.
+
+1. Open the `deployment.yaml` file located in the `kubernetes/templates` directory.
+
+2. Locate the `containers` section under `spec` and update the `image` field with the ECR image URL. It should look like this:
+
+```yaml
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: liatrio
+  template:
+    metadata:
+      labels:
+        app: liatrio
+    spec:
+      containers:
+        - name: liatrio
+          image: 218920203343.dkr.ecr.us-east-1.amazonaws.com/liatrio  # Replace with your ECR image URL
+          ports:
+            - containerPort: 5000
+```
+
+3. Save the changes to the `deployment.yaml` file.
+
+4. Open a terminal in the root directory of the cloned repository:
+
+```bash
+cd liatrio
+```
+
+5. Deploy the updated Helm chart using the following command:
+Certainly, here are the instructions on how to manually set up the Kubernetes context and use it for deploying the Helm chart:
+
+```markdown
+# Manual Kubernetes Context Setup and Helm Deployment
+
+After a successful Terraform deployment, you can manually set up the Kubernetes context and deploy the Helm chart using the following steps:
+
+1. Open a terminal in your local environment.
+
+2. Use the AWS CLI to update your Kubernetes configuration and set up the context for your EKS cluster. Replace `eks-cluster-liatrio-nonprod` with your actual EKS cluster name and `us-east-1` with your desired AWS region:
+
+```bash
+aws eks update-kubeconfig --name eks-cluster-liatrio-nonprod --region us-east-1
+```
+
+3. Verify that the context has been set by running:
+
+```bash
+kubectl config current-context
+```
+
+4. Navigate to the root directory of the cloned repository:
+
+```bash
+cd liatrio
+```
+
+5. Deploy the Helm chart using the following command:
+
+```bash
+helm upgrade --install liatrio ./kubernetes 
+```
 
 
-      build-docker-image:
-        runs-on: ubuntu-latest
-        needs: Deployment
-        steps:
-          - name: Checkout repository
-            uses: actions/checkout@v2
+## Conclusion
+```
 
-          - name: Log in to AWS ECR
-            uses: aws-actions/configure-aws-credentials@v1
-            with:
-              aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-              aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-              aws-region: us-east-1
-
-          - name: Extract ECR URL
-            id: extract_ecr_url
-            run: |
-              echo "::set-output name=ecr_url::$(terraform output -json ecr_image_url | jq -r)"
-
-          - name: Build and push Docker image
-            working-directory: app
-            env:
-              ECR_URL: ${{ steps.extract_ecr_url.outputs.ecr_url }}
-            run: |
-              docker build -t $ECR_URL .
-              docker push $ECR_URL
-
-   ```
-
-## Workflow Steps
-
-1. **Checkout repository**: This step checks out the repository code.
-
-2. **Set up Terraform**: Installs Terraform on the runner and configures it.
-
-3. **Configure AWS credentials**: Sets the AWS credentials using GitHub Secrets. The credentials are stored in a `.env` file.
-
-4. **Initialize Terraform**: Initializes the Terraform configuration.
-
-5. **Plan changes**: Generates an execution plan.
-
-6. **Apply changes**: Applies the changes to your AWS infrastructure.
+Please replace `eks-cluster-liatrio-nonprod` and `us-east-1` with the appropriate values for your EKS cluster and AWS region.
 
 ## Conclusion
 
-This README guides you through setting up and executing Terraform using GitHub Actions with AWS credentials stored as GitHub Secrets. With this automation, you can manage AWS infrastructure while ensuring the security of your credentials. For more advanced scenarios, consult the [Terraform documentation](https://www.terraform.io/docs/providers/aws/index.html) and GitHub Actions documentation.
+By updating the `deployment.yaml` file with the ECR image URL and redeploying the Helm chart, you ensure that your Kubernetes application is using the correct Docker image. This completes the deployment process and ensures your application is running with the latest changes.
+```
+
+Make sure to replace the placeholder in the `image` field with the actual ECR image URL that you captured during the workflow.
