@@ -96,12 +96,9 @@ jobs:
         run: |
           kubectl config current-context
           kubectl --v=10 config use-context arn:aws:eks:us-east-1:${{ steps.get-account-id.outputs.ACCOUNT_ID }}:cluster/eks-cluster-liatrio-nonprod
-      
       - name: Deploy Helm Chart
         run: |
-          pwd
-          kubectl apply -f ./kubernetes/templates/deployment.yaml
-
+          kubectl get po 
       - name: Deploy Helm Chart
         run: |
           helm upgrade --install liatrio ./kubernetes
