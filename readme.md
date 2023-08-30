@@ -1,150 +1,99 @@
-Certainly, here's the complete README with all the updated changes:
+# Deploying Liatrio Infrastructure to AWS EKS with GitHub Actions
 
-```markdown
-# Liatrio Deployment Workflow
-
-This repository contains a GitHub Actions workflow that automates the deployment of an application using Amazon EKS, Terraform, Helm, and Kubernetes.
+This guide will walk you through setting up a GitHub Actions workflow to deploy Liatrio's infrastructure to an AWS EKS cluster using Terraform and Helm.
 
 ## Prerequisites
 
-Before getting started, ensure you have the following set up:
+- GitHub repository with the Liatrio codebase.
+- AWS Account with necessary permissions to create EKS clusters, IAM roles, and other resources.
+- Basic knowledge of GitHub Actions, AWS, Terraform, Helm, and Kubernetes.
 
-1. An AWS account with necessary permissions to create and manage EKS clusters, IAM roles, and EC2 resources.
-2. AWS CLI and `kubectl` installed on your local machine.
-3. Helm and Terraform installed on your local machine.
+## Workflow Overview
 
-## Deployment Workflow
+1. **GitHub Action Workflow Setup:**
+   - The workflow is triggered on a push to the `master` branch.
+   - GitHub Actions secrets are not required as IAM roles are used for authentication.
+   - The IAM role is assumed by the GitHub Action workflow to gain necessary permissions.
+   
+2. **Terraform:**
+   - Terraform is used to create the EKS cluster, VPC, security groups, and other AWS resources.
+   - The IAM role is assumed by the GitHub Action workflow to run Terraform.
+   - The `terraform.tfvars` file contains the necessary variables.
+   
+3. **Docker Build and Push:**
+   - A Docker image is built from the `app/` directory and pushed to Amazon ECR.
+   
+4. **Update Kubernetes Manifests:**
+   - The Kubernetes deployment manifest `kubernetes/templates/deployment.yaml` is updated with the ECR image URL.
+   
+5. **Helm Chart Deployment:**
+   - The Helm chart located in the `kubernetes/` directory is deployed using the `helm upgrade --install` command.
 
-### GitHub Actions Workflow
+6. **Post-Deployment Steps:**
+   - Take note of the ECR image URL used in the Kubernetes deployment for future reference.
+   
+## Getting Started
 
-The deployment workflow in this repository is triggered on pushes to the `master` branch. It follows these steps:
+1. **Fork and Clone the Repository:**
+   - Fork the Liatrio repository.
+   - Clone the repository using the command:
+     ```shell
+     git clone git@github.com:aajibad1/liatrio.git
+     ```
 
-1. Checkout the repository.
-2. Set up Terraform and assume the AWS IAM role with necessary permissions.
-3. Initialize Terraform and plan the changes.
-4. Apply Terraform changes (if the push is on the `master` branch).
-5. Capture the EKS cluster's kubeconfig.
-6. Capture the ECR image URL.
-7. Update the Kubernetes deployment manifest with the ECR image URL.
-8. Build and push the Docker image to ECR.
-9. Log into Amazon ECR.
-10. Tag the Docker image.
-11. Push the Docker image to ECR.
-12. Use `kubectl` to set the current context and namespace for EKS.
-13. Deploy the Helm chart using `helm upgrade --install`.
+2. **IAM Role Setup:**
+   - Follow the instructions in [this guide](https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws/) to create an IAM role that GitHub Actions will assume.
 
-### Manual Terraform Execution
+3. **Configure GitHub Actions:**
+   - Make sure the `.github/workflows/deployment.yaml` file is present in your repository.
+   - Update the IAM role ARN in the `deployment.yaml` file:
+     ```yaml
+     - name: Assume AWS IAM Role
+       id: assume-role
+       uses: aws-actions/configure-aws-credentials@v3
+       with:
+         role-to-assume: arn:aws:iam::YOUR_AWS_ACCOUNT_ID:role/YOUR_GITHUB_ROLE
+         role-session-name: GitHub_to_AWS_via_FederatedOIDC
+         aws-region: us-east-1  # Replace with your desired AWS region
+     ```
+     
+4. **Terraform Configuration:**
+   - Update `terraform.tfvars` in the `terraform/` directory with your own values.
 
-To run Terraform manually, follow these steps:
+5. **GitHub Actions Workflow Execution:**
+   - Push changes to the `master` branch of your forked repository.
+   - GitHub Actions will automatically execute the workflow.
 
-1. Navigate to the `terraform` directory:
+6. **Verify Deployment:**
+   - After successful execution, verify the deployment in your EKS cluster.
 
-```bash
-cd terraform
-```
-
-2. Initialize Terraform:
-
-```bash
-terraform init
-```
-
-3. Plan the changes:
-
-```bash
-terraform plan -var-file=terraform.tfvars
-```
-
-4. Apply the changes:
-
-```bash
-terraform apply -auto-approve -var-file=terraform.tfvars
-```
-
-### GitHub Actions IAM Role Setup
-
-To set up the IAM role for GitHub Actions, follow the guide provided by AWS: [Use IAM Roles to Connect GitHub Actions to Actions in AWS](https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws/).
-
-Certainly, here's the updated section for the `deployment.yaml` file in the README:
-
-```markdown
-# After Successful Deployment
-
-After a successful Terraform deployment, you need to update the `deployment.yaml` file with the ECR image URL that was created during the workflow. This will ensure that your Kubernetes application uses the correct Docker image.
-
-1. Open the `deployment.yaml` file located in the `kubernetes/templates` directory.
-
-2. Locate the `containers` section under `spec` and update the `image` field with the ECR image URL. It should look like this:
-
-```yaml
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: liatrio
-  template:
-    metadata:
-      labels:
-        app: liatrio
-    spec:
-      containers:
-        - name: liatrio
-          image: 218920203343.dkr.ecr.us-east-1.amazonaws.com/liatrio  # Replace with your ECR image URL
-          ports:
-            - containerPort: 5000
-```
-
-3. Save the changes to the `deployment.yaml` file.
-
-4. Open a terminal in the root directory of the cloned repository:
-
-```bash
-cd liatrio
-```
-
-5. Deploy the updated Helm chart using the following command:
-Certainly, here are the instructions on how to manually set up the Kubernetes context and use it for deploying the Helm chart:
-
-```markdown
-# Manual Kubernetes Context Setup and Helm Deployment
-
-After a successful Terraform deployment, you can manually set up the Kubernetes context and deploy the Helm chart using the following steps:
-
-1. Open a terminal in your local environment.
-
-2. Use the AWS CLI to update your Kubernetes configuration and set up the context for your EKS cluster. Replace `eks-cluster-liatrio-nonprod` with your actual EKS cluster name and `us-east-1` with your desired AWS region:
-
-```bash
-aws eks update-kubeconfig --name eks-cluster-liatrio-nonprod --region us-east-1
-```
-
-3. Verify that the context has been set by running:
-
-```bash
-kubectl config current-context
-```
-
-4. Navigate to the root directory of the cloned repository:
-
-```bash
-cd liatrio
-```
-
-5. Deploy the Helm chart using the following command:
-
-```bash
-helm upgrade --install liatrio ./kubernetes 
-```
-
-
-## Conclusion
-```
-
-Please replace `eks-cluster-liatrio-nonprod` and `us-east-1` with the appropriate values for your EKS cluster and AWS region.
+7. **Update Kubernetes Image URL:**
+   - After the Docker image is pushed to ECR, update the `kubernetes/templates/deployment.yaml` file:
+     ```yaml
+     spec:
+       containers:
+         - name: liatrio
+           image: YOUR_ECR_IMAGE_URL
+           ports:
+             - containerPort: 5000
+     ```
+     
+8. **Get and Set Kube Context:**
+   - To get the available Kubernetes contexts, run:
+     ```shell
+     kubectl config get-contexts
+     ```
+   - To set the appropriate context for your EKS cluster, run:
+     ```shell
+     kubectl config use-context arn:aws:eks:us-east-1:YOUR_AWS_ACCOUNT_ID:cluster/eks-cluster-liatrio-nonprod
+     ```
+     
+9. **Deploy Kubernetes Manifests:**
+   - Deploy the Kubernetes manifests using Helm:
+     ```shell
+     helm upgrade --install liatrio ./kubernetes --namespace liatrio --kube-context arn:aws:eks:us-east-1:YOUR_AWS_ACCOUNT_ID:cluster/eks-cluster-liatrio-nonprod
+     ```
 
 ## Conclusion
 
-By updating the `deployment.yaml` file with the ECR image URL and redeploying the Helm chart, you ensure that your Kubernetes application is using the correct Docker image. This completes the deployment process and ensures your application is running with the latest changes.
-```
-
-Make sure to replace the placeholder in the `image` field with the actual ECR image URL that you captured during the workflow.
+With this setup, you can deploy Liatrio's infrastructure to an AWS EKS cluster using GitHub Actions, Terraform, and Helm. Ensure you have a good understanding of each step before proceeding. For more details, refer to the [official documentation](https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html).
