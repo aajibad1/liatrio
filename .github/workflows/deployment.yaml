@@ -99,7 +99,7 @@ jobs:
 
       - name: Deploy Helm Chart
         run: |
-          helm upgrade --install liatrio ./kubernetes --kube-context arn:aws:eks:us-east-1:${{ steps.get-account-id.outputs.ACCOUNT_ID }}:cluster/eks-cluster-liatrio-nonprod
+          helm upgrade --install liatrio ./kubernetes --namespace liatrio --kube-context arn:aws:eks:us-east-1:${{ steps.get-account-id.outputs.ACCOUNT_ID }}:cluster/eks-cluster-liatrio-nonprod
 
 
 
