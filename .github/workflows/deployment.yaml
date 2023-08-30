@@ -92,14 +92,6 @@ jobs:
       - name: Push Docker image to ECR
         run: docker push ${{ steps.get-account-id.outputs.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/liatrio
 
-      - name: Use Kubectl
-        run: |
-          kubectl config current-context
-          kubectl --v=10 config use-context arn:aws:eks:us-east-1:${{ steps.get-account-id.outputs.ACCOUNT_ID }}:cluster/eks-cluster-liatrio-nonprod
-
-      - name: Deploy Helm Chart
-        run: |
-          helm upgrade --install liatrio ./kubernetes --namespace liatrio --kube-context arn:aws:eks:us-east-1:${{ steps.get-account-id.outputs.ACCOUNT_ID }}:cluster/eks-cluster-liatrio-nonprod
-
+     
 
 
