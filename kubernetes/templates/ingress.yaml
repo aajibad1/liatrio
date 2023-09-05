@@ -10,6 +10,9 @@ metadata:
     alb.ingress.kubernetes.io/success-codes: 200,404,301
     alb.ingress.kubernetes.io/healthcheck-port: traffic-port
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+    kubernetes.io/ingress.class: alb
+
+
       
 spec:
   ingressClassName: alb
