@@ -24,7 +24,7 @@ resource "aws_subnet" "main-public" {
   tags = {
     Name                                                = "${var.RESOURCE_TAG}.public.${data.aws_availability_zones.available.names[count.index]}"
     "kubernetes.io/cluster/eks-cluster-liatrio-nonprod" = "owned"
-    "kubernetes.io/role/alb"                            = 1
+    "kubernetes.io/role/elb"                            = 1
 
   }
 }
