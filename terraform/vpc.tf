@@ -22,7 +22,10 @@ resource "aws_subnet" "main-public" {
   map_public_ip_on_launch = "true"
   availability_zone       = data.aws_availability_zones.available.names[count.index]
   tags = {
-    Name = "${var.RESOURCE_TAG}.public.${data.aws_availability_zones.available.names[count.index]}"
+    Name                                                = "${var.RESOURCE_TAG}.public.${data.aws_availability_zones.available.names[count.index]}"
+    "kubernetes.io/cluster/eks-cluster-liatrio-nonprod" = "owned"
+    "kubernetes.io/role/alb"                            = 1
+
   }
 }
 
@@ -33,7 +36,9 @@ resource "aws_subnet" "main-private" {
   cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, var.SUBNET_CIDR_BITS, count.index + length(aws_subnet.main-public.*.id))
   availability_zone = data.aws_availability_zones.available.names[count.index]
   tags = {
-    Name = "${var.RESOURCE_TAG}.private.${data.aws_availability_zones.available.names[count.index]}"
+    Name                                                = "${var.RESOURCE_TAG}.private.${data.aws_availability_zones.available.names[count.index]}"
+    "kubernetes.io/cluster/eks-cluster-liatrio-nonprod" = "owned"
+    "kubernetes.io/role/internal-elb"                   = 1
   }
 }
 
