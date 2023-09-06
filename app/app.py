@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def get_message():
-    message = "Automate all the things!"
+    message = "Automate all the things for testing!"
     timestamp = int(time.time())
     return jsonify(message=message, timestamp=timestamp)
 
